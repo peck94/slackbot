@@ -1,6 +1,7 @@
 from slackclient import SlackClient
 import time
 import re
+import json
 from RedditBehavior import RedditBehavior
 from DocBehavior import DocBehavior
 from CleverBotBehavior import CleverBotBehavior
@@ -45,8 +46,9 @@ class PeckBot(object):
         for resp in self.responses:
             regex, behavior = resp
             matches = re.findall(regex, event['text'])
+            channel_name = json.loads(self.client.api_call('channels.info', channel=event['channel']))['channel']['name']
             for match in matches:
-                print('[INFO] Triggered {0} on {1}'.format(behavior.name, event['channel']))
+                print('[INFO] Triggered {0} on #{1}'.format(behavior.name, channel_name))
                 try:
                     behavior.execute(self, match, event)
                 except Exception as e:
