@@ -4,6 +4,7 @@ import re
 from RedditBehavior import RedditBehavior
 from DocBehavior import DocBehavior
 from CleverBotBehavior import CleverBotBehavior
+from QuoteBehavior import QuoteBehavior
 
 class PeckBot(object):
     def __init__(self, token, timeout):
@@ -14,7 +15,8 @@ class PeckBot(object):
         self.responses = [
             ('r/([a-zA-Z0-9]+)', RedditBehavior()),
             ('peckbot: ?(.*)$', CleverBotBehavior()),
-            ('^peckdoc$', DocBehavior())
+            ('^peckdoc$', DocBehavior()),
+            ('peckbot quote ?(.*)$', QuoteBehavior())
         ]
 
     def connect(self):
@@ -33,7 +35,7 @@ class PeckBot(object):
             events = self.client.rtm_read()
             for event in events:
                 if 'type' in event and event['type'] == 'message':
-                    if event['user'] != self.userid:
+                    if 'user' in event and event['user'] != self.userid:
                         self.respond(event['text'], event['channel'])
             self.pause()
 
