@@ -2,7 +2,8 @@ class DocBehavior(object):
     def __init__(self):
         self.name = 'Doxx'
 
-    def execute(self, bot, match, channel):
+    def execute(self, bot, match, event):
+        channel = event['channel']
         msg = 'Yes, this is peckbot\n'
         msg += 'Available behaviors:\n'
         for resp in bot.responses:

@@ -5,6 +5,7 @@ from RedditBehavior import RedditBehavior
 from DocBehavior import DocBehavior
 from CleverBotBehavior import CleverBotBehavior
 from QuoteBehavior import QuoteBehavior
+from TriviaBehavior import TriviaBehavior
 
 class PeckBot(object):
     def __init__(self, token, timeout):
@@ -13,10 +14,11 @@ class PeckBot(object):
         self.timeout = timeout
         self.userid = 'U04U7K4HC'
         self.responses = [
-            ('r/([a-zA-Z0-9]+)', RedditBehavior()),
-            ('peckbot: ?(.*)$', CleverBotBehavior()),
-            ('^peckdoc$', DocBehavior()),
-            ('peckbot quote ?(.*)$', QuoteBehavior())
+            ('^!reddit ([a-zA-Z0-9]+)', RedditBehavior()),
+            ('^!chat (.*)$', CleverBotBehavior()),
+            ('^!doc$', DocBehavior()),
+            ('!quote ?(.*)$', QuoteBehavior()),
+            ('!trivia ?(.*)$', TriviaBehavior())
         ]
 
     def connect(self):
@@ -36,16 +38,16 @@ class PeckBot(object):
             for event in events:
                 if 'type' in event and event['type'] == 'message':
                     if 'user' in event and event['user'] != self.userid:
-                        self.respond(event['text'], event['channel'])
+                        self.respond(event)
             self.pause()
 
-    def respond(self, text, channel):
+    def respond(self, event):
         for resp in self.responses:
             regex, behavior = resp
-            matches = re.findall(regex, text)
+            matches = re.findall(regex, event['text'])
             for match in matches:
-                print('[INFO] Triggered {0} on {1}'.format(behavior.name, channel))
+                print('[INFO] Triggered {0} on {1}'.format(behavior.name, event['channel']))
                 try:
-                    behavior.execute(self, match, channel)
+                    behavior.execute(self, match, event)
                 except Exception as e:
                     print('[ERROR] {0} failed: {1}'.format(behavior.name, e))
