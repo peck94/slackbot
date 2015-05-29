@@ -11,7 +11,10 @@ class QuoteBehavior(object):
         categories = 'joel_on_software+paul_graham+prog_style+codehappy'
         if match == '':
             match = categories
-        req = urllib2.urlopen('http://www.iheartquotes.com/api/v1/random?source={0}'.format(match))
-        data = self.parser.unescape(req.read())
+        try:
+            req = urllib2.urlopen('http://www.iheartquotes.com/api/v1/random?source={0}'.format(match))
+            data = self.parser.unescape(req.read())
+        except Exception as e:
+            data = '{0}\nCategories: {1}'.format(e, match)
 
         bot.send_msg(data, channel)

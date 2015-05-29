@@ -7,9 +7,12 @@ from DocBehavior import DocBehavior
 from CleverBotBehavior import CleverBotBehavior
 from QuoteBehavior import QuoteBehavior
 from TriviaBehavior import TriviaBehavior
+from NonsensBehavior import NonsensTrainingBehavior
+from NonsensBehavior import NonsensSpewingBehavior
 
 class PeckBot(object):
     def __init__(self, token, timeout):
+        print('[INFO] Initializing bot...')
         self.token = token
         self.client = SlackClient(token)
         self.timeout = timeout
@@ -18,9 +21,12 @@ class PeckBot(object):
             ('^!reddit ([a-zA-Z0-9]+)', RedditBehavior()),
             ('^!chat (.*)$', CleverBotBehavior()),
             ('^!doc$', DocBehavior()),
-            ('!quote ?(.*)$', QuoteBehavior()),
-            ('!trivia ?(.*)$', TriviaBehavior())
+            ('^!quote ?(.*)$', QuoteBehavior()),
+            ('^!trivia ?(.*)$', TriviaBehavior()),
+            ('(.+)', NonsensSpewingBehavior()),
+            ('.+', NonsensTrainingBehavior())
         ]
+        print('[INFO] Init done.')
 
     def connect(self):
         return self.client.rtm_connect()
@@ -46,10 +52,16 @@ class PeckBot(object):
         for resp in self.responses:
             regex, behavior = resp
             matches = re.findall(regex, event['text'])
-            channel_name = json.loads(self.client.api_call('channels.info', channel=event['channel']))['channel']['name']
+            try:
+                channel_name = json.loads(self.client.api_call('channels.info', channel=event['channel']))['channel']['name']
+            except KeyError:
+                channel_name = event['channel']
             for match in matches:
                 print('[INFO] Triggered {0} on #{1}'.format(behavior.name, channel_name))
                 try:
                     behavior.execute(self, match, event)
                 except Exception as e:
                     print('[ERROR] {0} failed: {1}'.format(behavior.name, e))
+
+            if len(matches) > 0:
+                break
